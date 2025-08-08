@@ -1,0 +1,34 @@
+load "medit"
+verbosity=0;
+
+mesh3 th = readmesh3("AORTA-COMCA2025.mesh"); // MALHA ESTREITA
+plot(th, wait=true);
+medit("Geometria Arterial", th, order=1); 
+fespace Vh(th,P1b);
+fespace Qh(th,P1);
+
+Vh u,v,w,uh,vh,wh,uold=0,vold=0,wold=0;
+Qh p,ph;
+real p1=10, p0=0,  dt=0.1, nu=0.005; int n=0;
+problem a([u,v,w,p],[uh,vh,wh,ph],init=n, solver=sparsesolver)
+        = int3d(th)((u*uh+v*vh+w*wh)/dt
+        + nu*( dx(u)*dx(uh)+dy(u)*dy(uh)+dz(u)*dz(uh)
+        + dx(v)*dx(vh)+dy(v)*dy(vh)+dz(v)*dz(vh)
+        + dx(w)*dx(wh)+dy(w)*dy(wh)+dz(w)*dz(wh) )
+        - (dx(uh)+dy(vh)+dz(wh))*p - (dx(u)+dy(v)+dz(w))*ph 
+		+ p*ph*1e-5 )
+ - int3d(th)(( convect([uold,vold,wold],-dt,uold)*uh
+  +convect([uold,vold,wold],-dt,vold)*vh
+  +convect([uold,vold,wold],-dt,wold)*wh )/dt)
+-int2d(th,5)(p1*wh) - int2d(th,3,4,6,7,8)(p0*vh)
++ on(2,u=0,v=0,w=0)
+//+ on(2,v=0,u=0)+ on(3,u=0,w=0)
+;
+for(real t=0;t<0.6;t+=dt){ 
+p1=cos(pi*t);
+ n+=1; a; uold=u; vold=v; wold=w;
+plot([u,v,w],p, value=true, fill=true, wait=0);
+}
+
+medit("Pressure",th,p,order=1);
+medit("Velocity",th,[u,v,w],order=1);
