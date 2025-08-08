@@ -1,0 +1,16 @@
+//include "ffmatlib.idp"
+load "medit"
+load "msh3"
+mesh3 Th = readmesh3("ParadoxMesh.mesh"); // MALHA ESTREITA
+plot(Th, wait=true);
+fespace Vh(Th, P2);
+cout << "Numero de graus de liberdade (dofs): " << Vh.ndof << endl;
+medit("Penrose_Triangle",Th, order=1);
+
+
+
+
+
+
+
+
